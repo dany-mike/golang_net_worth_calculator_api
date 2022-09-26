@@ -1,9 +1,17 @@
 package main
 
-/// Go fmt import
-import "fmt"
+import (
+	"github.com/gin-gonic/gin"
+)
 
-// Go main function
+type item struct {
+	Id       string
+	name     string
+	value    string
+	quantity int
+}
+
 func main() {
-	fmt.Println("Hello World!")
+	router := gin.Default()
+	router.Run("localhost:9090")
 }
