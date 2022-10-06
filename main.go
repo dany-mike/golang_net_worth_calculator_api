@@ -1,29 +1,25 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
+	"log"
+	"os"
 
-	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+
+	"golang_net_worth_calculator_api/controllers"
 )
 
-type item struct {
-	ID       string
-	Name     string
-	Value    int
-	Quantity int
-}
-
-var items = []item{
-	{ID: "1", Name: "VOLKSWAGEN POLO 6", Value: 15800, Quantity: 1},
-	{ID: "2", Name: "Iphone 14", Value: 1000, Quantity: 1},
-}
-
-func getItems(context *gin.Context) {
-	context.IndentedJSON(http.StatusOK, items)
-}
+var server = controllers.Server{}
 
 func main() {
-	router := gin.Default()
-	router.GET("/items", getItems)
-	router.Run("localhost:9090")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	server.Initialize(os.Getenv("DB_DRIVER"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_PORT"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
+
+	fmt.Println("Established a successful connection!")
+
+	server.Run(":5050")
 }
