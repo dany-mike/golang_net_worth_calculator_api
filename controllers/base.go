@@ -11,6 +11,8 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres" //postgres database driver
 
 	"golang_net_worth_calculator_api/models"
+
+	"github.com/gorilla/handlers"
 )
 
 type Server struct {
@@ -41,5 +43,6 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 }
 
 func (server *Server) Run(addr string) {
-	log.Fatal(http.ListenAndServe(addr, server.Router))
+	corsObj := handlers.AllowedOrigins([]string{"*"})
+	log.Fatal(http.ListenAndServe(addr, handlers.CORS(corsObj)(server.Router)))
 }
