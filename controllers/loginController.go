@@ -1,4 +1,3 @@
-
 package controllers
 
 import (
@@ -10,8 +9,19 @@ import (
 	"golang_net_worth_calculator_api/models"
 	"golang_net_worth_calculator_api/responses"
 	"golang_net_worth_calculator_api/utils/formatError"
+
 	"golang.org/x/crypto/bcrypt"
 )
+
+type User struct {
+	Username string
+	Email    string
+}
+
+type SigninResponse struct {
+	User  User
+	Token string
+}
 
 func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
@@ -32,16 +42,16 @@ func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	token, err := server.SignIn(user.Email, user.Password)
+	response, err := server.SignIn(user.Email, user.Password)
 	if err != nil {
 		formattedError := formatError.FormatError(err.Error())
 		responses.ERROR(w, http.StatusUnprocessableEntity, formattedError)
 		return
 	}
-	responses.JSON(w, http.StatusOK, token)
+	responses.JSON(w, http.StatusOK, response)
 }
 
-func (server *Server) SignIn(email, password string) (string, error) {
+func (server *Server) SignIn(email, password string) (SigninResponse, error) {
 
 	var err error
 
@@ -49,11 +59,14 @@ func (server *Server) SignIn(email, password string) (string, error) {
 
 	err = server.DB.Debug().Model(models.User{}).Where("email = ?", email).Take(&user).Error
 	if err != nil {
-		return "", err
+		return SigninResponse{}, err
 	}
 	err = models.VerifyPassword(user.Password, password)
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		return "", err
+		return SigninResponse{}, err
 	}
-	return auth.CreateToken(user.ID)
+	token, err := auth.CreateToken(user.ID)
+
+	userInstance := User{user.Username, user.Email}
+	return SigninResponse{userInstance, token}, err
 }
