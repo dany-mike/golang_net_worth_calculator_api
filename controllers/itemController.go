@@ -23,14 +23,14 @@ func (server *Server) CreateItem(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	post := models.Item{}
-	err = json.Unmarshal(body, &post)
+	item := models.Item{}
+	err = json.Unmarshal(body, &item)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	post.Prepare()
-	err = post.Validate()
+	item.Prepare()
+	err = item.Validate()
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
@@ -40,30 +40,30 @@ func (server *Server) CreateItem(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	if uid != post.AuthorID {
+	if uid != item.UserID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
 		return
 	}
-	postCreated, err := post.SaveItem(server.DB)
+	itemCreated, err := item.SaveItem(server.DB)
 	if err != nil {
 		formattedError := formatError.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
 	}
-	w.Header().Set("Lacation", fmt.Sprintf("%s%s/%d", r.Host, r.URL.Path, postCreated.ID))
-	responses.JSON(w, http.StatusCreated, postCreated)
+	w.Header().Set("Lacation", fmt.Sprintf("%s%s/%d", r.Host, r.URL.Path, itemCreated.ID))
+	responses.JSON(w, http.StatusCreated, itemCreated)
 }
 
 func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
 
-	post := models.Item{}
+	item := models.Item{}
 
-	posts, err := post.FindAllItems(server.DB)
+	items, err := item.FindAllItems(server.DB)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	responses.JSON(w, http.StatusOK, posts)
+	responses.JSON(w, http.StatusOK, items)
 }
 
 func (server *Server) GetItem(w http.ResponseWriter, r *http.Request) {
@@ -74,48 +74,48 @@ func (server *Server) GetItem(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
-	post := models.Item{}
+	item := models.Item{}
 
-	postReceived, err := post.FindItemByID(server.DB, pid)
+	itemReceived, err := item.FindItemByID(server.DB, pid)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	responses.JSON(w, http.StatusOK, postReceived)
+	responses.JSON(w, http.StatusOK, itemReceived)
 }
 
 func (server *Server) UpdateItem(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
-	// Check if the post id is valid
+	// Check if the item id is valid
 	pid, err := strconv.ParseUint(vars["id"], 10, 64)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
 
-	//CHeck if the auth token is valid and  get the user id from it
+	//CHeck if the auth token is valid and get the user id from it
 	uid, err := auth.ExtractTokenID(r)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
 
-	// Check if the post exist
-	post := models.Item{}
-	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", pid).Take(&post).Error
+	// Check if the item exist
+	item := models.Item{}
+	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", pid).Take(&item).Error
 	if err != nil {
 		responses.ERROR(w, http.StatusNotFound, errors.New("Item not found"))
 		return
 	}
 
-	// If a user attempt to update a post not belonging to him
-	if uid != post.AuthorID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+	// If a user attempt to update a item not belonging to him
+	if uid != item.UserID {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Forbidden"))
 		return
 	}
-	// Read the data posted
+	// Read the data
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
@@ -123,43 +123,43 @@ func (server *Server) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Start processing the request data
-	postUpdate := models.Item{}
-	err = json.Unmarshal(body, &postUpdate)
+	itemUpdate := models.Item{}
+	err = json.Unmarshal(body, &itemUpdate)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
 	//Also check if the request user id is equal to the one gotten from token
-	if uid != postUpdate.AuthorID {
+	if uid != itemUpdate.UserID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
 
-	postUpdate.Prepare()
-	err = postUpdate.Validate()
+	itemUpdate.Prepare()
+	err = itemUpdate.Validate()
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
-	postUpdate.ID = post.ID //this is important to tell the model the post id to update, the other update field are set above
+	itemUpdate.ID = item.ID
 
-	postUpdated, err := postUpdate.UpdateAPost(server.DB)
+	itemUpdated, err := itemUpdate.UpdateItem(server.DB)
 
 	if err != nil {
 		formattedError := formatError.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
 	}
-	responses.JSON(w, http.StatusOK, postUpdated)
+	responses.JSON(w, http.StatusOK, itemUpdated)
 }
 
-func (server *Server) DeletePost(w http.ResponseWriter, r *http.Request) {
+func (server *Server) DeleteItem(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
-	// Is a valid post id given to us?
+	// Is a valid item id given to us?
 	pid, err := strconv.ParseUint(vars["id"], 10, 64)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
@@ -173,20 +173,20 @@ func (server *Server) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the post exist
-	post := models.Post{}
-	err = server.DB.Debug().Model(models.Post{}).Where("id = ?", pid).Take(&post).Error
+	// Check if the item exist
+	item := models.Item{}
+	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", pid).Take(&item).Error
 	if err != nil {
 		responses.ERROR(w, http.StatusNotFound, errors.New("Unauthorized"))
 		return
 	}
 
-	// Is the authenticated user, the owner of this post?
-	if uid != post.AuthorID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+	// Is the authenticated user, the owner of this item?
+	if uid != item.UserID {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Forbidden"))
 		return
 	}
-	_, err = post.DeleteAPost(server.DB, pid, uid)
+	_, err = item.DeleteItem(server.DB, pid, uid)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return

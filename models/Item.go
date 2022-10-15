@@ -90,7 +90,7 @@ func (p *Item) FindItemByID(db *gorm.DB, pid uint64) (*Item, error) {
 	return p, nil
 }
 
-func (p *Item) UpdateAItem(db *gorm.DB) (*Item, error) {
+func (p *Item) UpdateItem(db *gorm.DB) (*Item, error) {
 
 	var err error
 
@@ -107,7 +107,7 @@ func (p *Item) UpdateAItem(db *gorm.DB) (*Item, error) {
 	return p, nil
 }
 
-func (p *Item) DeleteAItem(db *gorm.DB, pid uint64, uid uint32) (int64, error) {
+func (p *Item) DeleteItem(db *gorm.DB, pid uint64, uid uint32) (int64, error) {
 
 	db = db.Debug().Model(&Item{}).Where("id = ? and user_id = ?", pid, uid).Take(&Item{}).Delete(&Item{})
 
