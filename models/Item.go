@@ -53,10 +53,10 @@ func (p *Item) SaveItem(db *gorm.DB) (*Item, error) {
 	return p, nil
 }
 
-func (p *Item) FindAllItems(db *gorm.DB) (*[]Item, error) {
+func (p *Item) FindItemsByUserId(db *gorm.DB, user_id uint64) (*[]Item, error) {
 	var err error
 	items := []Item{}
-	err = db.Debug().Model(&Item{}).Limit(100).Find(&items).Error
+	err = db.Debug().Model(&Item{}).Where("user_id = ?", user_id).Find(&items).Error
 	if err != nil {
 		return &[]Item{}, err
 	}
@@ -71,9 +71,9 @@ func (p *Item) FindAllItems(db *gorm.DB) (*[]Item, error) {
 	return &items, nil
 }
 
-func (p *Item) FindItemByID(db *gorm.DB, pid uint64) (*Item, error) {
+func (p *Item) FindItemByID(db *gorm.DB, itemId uint64) (*Item, error) {
 	var err error
-	err = db.Debug().Model(&Item{}).Where("id = ?", pid).Take(&p).Error
+	err = db.Debug().Model(&Item{}).Where("id = ?", itemId).Take(&p).Error
 	if err != nil {
 		return &Item{}, err
 	}

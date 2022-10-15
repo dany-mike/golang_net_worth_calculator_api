@@ -57,12 +57,18 @@ func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
 
 	item := models.Item{}
 
-	items, err := item.FindAllItems(server.DB)
-	if err != nil {
-		responses.ERROR(w, http.StatusInternalServerError, err)
-		return
+	vars := mux.Vars(r)
+
+	// Check if the item id is valid
+	user_id, err := strconv.ParseUint(vars["user_id"], 10, 64)
+	if err == nil {
+		items, err := item.FindItemsByUserId(server.DB, user_id)
+		if err != nil {
+			responses.ERROR(w, http.StatusInternalServerError, err)
+			return
+		}
+		responses.JSON(w, http.StatusOK, items)
 	}
-	responses.JSON(w, http.StatusOK, items)
 }
 
 func (server *Server) GetItem(w http.ResponseWriter, r *http.Request) {
