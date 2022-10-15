@@ -4,28 +4,24 @@ import (
 	"errors"
 	"html"
 	"strings"
-	"time"
 
 	"github.com/jinzhu/gorm"
 )
 
 type Item struct {
-	ID        uint64    `gorm:"primary_key;auto_increment" json:"id"`
-	Title     string    `gorm:"size:255;not null;unique" json:"title"`
-	Price     string    `gorm:"size:255;not null;" json:"price"`
-	User      User      `json:"user"`
-	UserID    uint32    `gorm:"not null" json:"user_id"`
-	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
+	ID          uint64  `gorm:"primary_key;auto_increment" json:"id"`
+	Title       string  `gorm:"size:255;not null;" json:"title"`
+	Description string  `json:"description"`
+	Price       float64 `gorm:"not null;" json:"price"`
+	User        User    `json:"user"`
+	UserID      uint32  `gorm:"not null" json:"user_id"`
 }
 
 func (p *Item) Prepare() {
 	p.ID = 0
 	p.Title = html.EscapeString(strings.TrimSpace(p.Title))
-	p.Price = html.EscapeString(strings.TrimSpace(p.Price))
+	p.Description = html.EscapeString(strings.TrimSpace(p.Description))
 	p.User = User{}
-	p.CreatedAt = time.Now()
-	p.UpdatedAt = time.Now()
 }
 
 func (p *Item) Validate() error {
@@ -33,7 +29,7 @@ func (p *Item) Validate() error {
 	if p.Title == "" {
 		return errors.New("required title")
 	}
-	if p.Price == "" {
+	if p.Price == 0 {
 		return errors.New("required price")
 	}
 	if p.UserID < 1 {
@@ -91,10 +87,9 @@ func (p *Item) FindItemByID(db *gorm.DB, pid uint64) (*Item, error) {
 }
 
 func (p *Item) UpdateItem(db *gorm.DB) (*Item, error) {
-
 	var err error
 
-	err = db.Debug().Model(&Item{}).Where("id = ?", p.ID).Updates(Item{Title: p.Title, User: p.User, UpdatedAt: time.Now()}).Error
+	err = db.Debug().Model(&Item{}).Where("id = ?", p.ID).Updates(Item{Title: p.Title, User: p.User, Price: p.Price, Description: p.Description}).Error
 	if err != nil {
 		return &Item{}, err
 	}
