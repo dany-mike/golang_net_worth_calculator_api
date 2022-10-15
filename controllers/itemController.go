@@ -74,14 +74,37 @@ func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
 func (server *Server) GetItem(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	pid, err := strconv.ParseUint(vars["id"], 10, 64)
+
+	// Is a valid item id given to us?
+	itemId, err := strconv.ParseUint(vars["id"], 10, 64)
+
+	//Check if the auth token is valid and get the user id from it
+	uid, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+
+	// Check if the item exist
+	item := models.Item{}
+	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", itemId).Take(&item).Error
+	if err != nil {
+		responses.ERROR(w, http.StatusNotFound, errors.New("item not found"))
+		return
+	}
+
+	// If a user attempt to update a item not belonging to him
+	if uid != item.UserID {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Forbidden"))
+		return
+	}
+
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
-	item := models.Item{}
 
-	itemReceived, err := item.FindItemByID(server.DB, pid)
+	itemReceived, err := item.FindItemByID(server.DB, itemId)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
@@ -94,13 +117,13 @@ func (server *Server) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	// Check if the item id is valid
-	pid, err := strconv.ParseUint(vars["id"], 10, 64)
+	itemId, err := strconv.ParseUint(vars["id"], 10, 64)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
 
-	//CHeck if the auth token is valid and get the user id from it
+	//Check if the auth token is valid and get the user id from it
 	uid, err := auth.ExtractTokenID(r)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
@@ -109,9 +132,9 @@ func (server *Server) UpdateItem(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the item exist
 	item := models.Item{}
-	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", pid).Take(&item).Error
+	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", itemId).Take(&item).Error
 	if err != nil {
-		responses.ERROR(w, http.StatusNotFound, errors.New("Item not found"))
+		responses.ERROR(w, http.StatusNotFound, errors.New("item not found"))
 		return
 	}
 
@@ -165,7 +188,7 @@ func (server *Server) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	// Is a valid item id given to us?
-	pid, err := strconv.ParseUint(vars["id"], 10, 64)
+	itemId, err := strconv.ParseUint(vars["id"], 10, 64)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
@@ -180,7 +203,7 @@ func (server *Server) DeleteItem(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the item exist
 	item := models.Item{}
-	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", pid).Take(&item).Error
+	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", itemId).Take(&item).Error
 	if err != nil {
 		responses.ERROR(w, http.StatusNotFound, errors.New("Unauthorized"))
 		return
@@ -191,11 +214,11 @@ func (server *Server) DeleteItem(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Forbidden"))
 		return
 	}
-	_, err = item.DeleteItem(server.DB, pid, uid)
+	_, err = item.DeleteItem(server.DB, itemId, uid)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
-	w.Header().Set("Entity", fmt.Sprintf("%d", pid))
+	w.Header().Set("Entity", fmt.Sprintf("%d", itemId))
 	responses.JSON(w, http.StatusNoContent, "")
 }
