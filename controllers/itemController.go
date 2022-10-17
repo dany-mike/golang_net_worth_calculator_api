@@ -54,12 +54,10 @@ func (server *Server) CreateItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
-
 	item := models.Item{}
 
 	vars := mux.Vars(r)
 
-	// Check if the item id is valid
 	user_id, err := strconv.ParseUint(vars["user_id"], 10, 64)
 	if err == nil {
 		items, err := item.FindItemsByUserId(server.DB, user_id)
@@ -67,7 +65,25 @@ func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
 			responses.ERROR(w, http.StatusInternalServerError, err)
 			return
 		}
+		// 
 		responses.JSON(w, http.StatusOK, items)
+	}
+}
+
+func (server *Server) GetTotalNetWorth(w http.ResponseWriter, r *http.Request) {
+	item := models.Item{}
+
+	vars := mux.Vars(r)
+
+	user_id, err := strconv.ParseUint(vars["user_id"], 10, 64)
+
+	if err == nil {
+		items, err := item.FindItemsByUserId(server.DB, user_id)
+		if err != nil {
+			responses.ERROR(w, http.StatusInternalServerError, err)
+			return
+		}
+		responses.JSON(w, http.StatusOK, getTotalNetWorth(*items))
 	}
 }
 
@@ -221,4 +237,17 @@ func (server *Server) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Entity", fmt.Sprintf("%d", itemId))
 	responses.JSON(w, http.StatusNoContent, "")
+}
+
+func getTotalNetWorth(items []models.Item) float64 {
+
+	var (
+		total float64 = 0
+	)
+
+	for i := 0; i < len(items); i++ {
+		total += items[i].Price
+	}
+
+	return float64(total)
 }
