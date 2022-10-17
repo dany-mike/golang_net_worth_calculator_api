@@ -56,16 +56,15 @@ func (server *Server) CreateItem(w http.ResponseWriter, r *http.Request) {
 func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
 	item := models.Item{}
 
-	vars := mux.Vars(r)
+	uid, err := auth.ExtractTokenID(r)
 
-	user_id, err := strconv.ParseUint(vars["user_id"], 10, 64)
 	if err == nil {
-		items, err := item.FindItemsByUserId(server.DB, user_id)
+		items, err := item.FindItemsByUserId(server.DB, uint64(uid))
 		if err != nil {
 			responses.ERROR(w, http.StatusInternalServerError, err)
 			return
 		}
-		// 
+		//
 		responses.JSON(w, http.StatusOK, items)
 	}
 }
@@ -73,12 +72,10 @@ func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
 func (server *Server) GetTotalNetWorth(w http.ResponseWriter, r *http.Request) {
 	item := models.Item{}
 
-	vars := mux.Vars(r)
-
-	user_id, err := strconv.ParseUint(vars["user_id"], 10, 64)
+	uid, err := auth.ExtractTokenID(r)
 
 	if err == nil {
-		items, err := item.FindItemsByUserId(server.DB, user_id)
+		items, err := item.FindItemsByUserId(server.DB, uint64(uid))
 		if err != nil {
 			responses.ERROR(w, http.StatusInternalServerError, err)
 			return
@@ -93,6 +90,10 @@ func (server *Server) GetItem(w http.ResponseWriter, r *http.Request) {
 
 	// Is a valid item id given to us?
 	itemId, err := strconv.ParseUint(vars["id"], 10, 64)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, errors.New("bad request"))
+		return
+	}
 
 	//Check if the auth token is valid and get the user id from it
 	uid, err := auth.ExtractTokenID(r)

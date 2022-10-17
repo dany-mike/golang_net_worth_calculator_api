@@ -15,9 +15,9 @@ func (s *Server) initializeRoutes() {
 
 	// Item Routes
 	s.Router.HandleFunc("/items", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.CreateItem))).Methods("POST")
-	s.Router.HandleFunc("/items/user/{user_id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetItems))).Methods("GET")
+	s.Router.HandleFunc("/items", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetItems))).Methods("GET")
 	s.Router.HandleFunc("/items/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetItem))).Methods("GET")
 	s.Router.HandleFunc("/items/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateItem))).Methods("PUT")
 	s.Router.HandleFunc("/items/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteItem)).Methods("DELETE")
-	s.Router.HandleFunc("/items/get-total/{user_id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetTotalNetWorth))).Methods("GET")
+	s.Router.HandleFunc("/total-value", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetTotalNetWorth))).Methods("GET")
 }
