@@ -34,6 +34,29 @@ var items = []models.Item{
 	},
 }
 
+var enrich = []models.Item{
+	{
+		Title:       "Iphone 14",
+		Price:       1019,
+		Description: "Avec iOS 16, vous pouvez personnaliser votre écran verrouillé de façons inédites. Détourez une partie de votre photo pour la mettre en avant. Suivez l’évolution de vos anneaux Activité. Et voyez en direct les informations de vos apps préférées.",
+	},
+	{
+		Title:       "Iphone 14",
+		Price:       1019,
+		Description: "Avec iOS 16, vous pouvez personnaliser votre écran verrouillé de façons inédites. Détourez une partie de votre photo pour la mettre en avant. Suivez l’évolution de vos anneaux Activité. Et voyez en direct les informations de vos apps préférées.",
+	},
+	{
+		Title:       "Iphone 14",
+		Price:       1019,
+		Description: "Avec iOS 16, vous pouvez personnaliser votre écran verrouillé de façons inédites. Détourez une partie de votre photo pour la mettre en avant. Suivez l’évolution de vos anneaux Activité. Et voyez en direct les informations de vos apps préférées.",
+	},
+	{
+		Title:       "Iphone 14",
+		Price:       1019,
+		Description: "Avec iOS 16, vous pouvez personnaliser votre écran verrouillé de façons inédites. Détourez une partie de votre photo pour la mettre en avant. Suivez l’évolution de vos anneaux Activité. Et voyez en direct les informations de vos apps préférées.",
+	},
+}
+
 func Load(db *gorm.DB) {
 
 	err := db.Debug().DropTableIfExists(&models.Item{}, &models.User{}).Error
@@ -58,6 +81,14 @@ func Load(db *gorm.DB) {
 		items[i].UserID = users[i].ID
 
 		err = db.Debug().Model(&models.Item{}).Create(&items[i]).Error
+		if err != nil {
+			log.Fatalf("cannot seed items table: %v", err)
+		}
+	}
+
+	for i, _ := range enrich {
+		enrich[i].UserID = 1
+		err = db.Debug().Model(&models.Item{}).Create(&enrich[i]).Error
 		if err != nil {
 			log.Fatalf("cannot seed items table: %v", err)
 		}
