@@ -59,7 +59,7 @@ func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
 	uid, err := auth.ExtractTokenID(r)
 
 	if err == nil {
-		items, err := item.FindItemsByUserId(server.DB, uint64(uid))
+		items, err := item.FindItems(server.DB, uint64(uid))
 		if err != nil {
 			responses.ERROR(w, http.StatusInternalServerError, err)
 			return
@@ -75,7 +75,7 @@ func (server *Server) GetTotalNetWorth(w http.ResponseWriter, r *http.Request) {
 	uid, err := auth.ExtractTokenID(r)
 
 	if err == nil {
-		items, err := item.FindItemsByUserId(server.DB, uint64(uid))
+		items, err := item.FindItems(server.DB, uint64(uid))
 		if err != nil {
 			responses.ERROR(w, http.StatusInternalServerError, err)
 			return

@@ -13,8 +13,8 @@ type Item struct {
 	Title       string  `gorm:"size:255;not null;" json:"title"`
 	Description string  `json:"description"`
 	Price       float64 `gorm:"not null;" json:"price"`
-	User        User    `json:"user"`
-	UserID      uint32  `gorm:"not null" json:"user_id"`
+	User        User    `json:"-"`
+	UserID      uint32  `gorm:"not null" json:"-"`
 }
 
 func (p *Item) Prepare() {
@@ -53,7 +53,7 @@ func (p *Item) SaveItem(db *gorm.DB) (*Item, error) {
 	return p, nil
 }
 
-func (p *Item) FindItemsByUserId(db *gorm.DB, user_id uint64) (*[]Item, error) {
+func (p *Item) FindItems(db *gorm.DB, user_id uint64) (*[]Item, error) {
 	var err error
 	items := []Item{}
 	err = db.Debug().Model(&Item{}).Where("user_id = ?", user_id).Find(&items).Error
