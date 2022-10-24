@@ -1,1 +1,1 @@
-web: go run main.go
+web: ./golang_net_worth_calculator_api
