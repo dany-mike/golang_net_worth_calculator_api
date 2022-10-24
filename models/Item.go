@@ -32,8 +32,8 @@ func (p *Item) Validate() error {
 	if p.Price == 0 {
 		return errors.New("required price")
 	}
-	if p.UserID < 1 {
-		return errors.New("required user")
+	if p.Description == "" {
+		return errors.New("required description")
 	}
 	return nil
 }
@@ -89,7 +89,7 @@ func (p *Item) FindItemByID(db *gorm.DB, itemId uint64) (*Item, error) {
 func (p *Item) UpdateItem(db *gorm.DB) (*Item, error) {
 	var err error
 
-	err = db.Debug().Model(&Item{}).Where("id = ?", p.ID).Updates(Item{Title: p.Title, User: p.User, Price: p.Price, Description: p.Description}).Error
+	err = db.Debug().Model(&Item{}).Where("id = ?", p.ID).Updates(Item{Title: p.Title, Price: p.Price, Description: p.Description}).Error
 	if err != nil {
 		return &Item{}, err
 	}

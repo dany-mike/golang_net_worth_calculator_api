@@ -175,12 +175,6 @@ func (server *Server) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Also check if the request user id is equal to the one gotten from token
-	if uid != itemUpdate.UserID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
-		return
-	}
-
 	itemUpdate.Prepare()
 	err = itemUpdate.Validate()
 	if err != nil {
@@ -189,6 +183,8 @@ func (server *Server) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	itemUpdate.ID = item.ID
+	itemUpdate.UserID = item.UserID
+	itemUpdate.User = item.User
 
 	itemUpdated, err := itemUpdate.UpdateItem(server.DB)
 
