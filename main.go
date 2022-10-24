@@ -14,7 +14,7 @@ import (
 var server = controllers.Server{}
 
 func main() {
-	port := os.Getenv("PORT")	
+	port := os.Getenv("PORT")
 	err := godotenv.Load()
 
 	if os.Getenv("APP_ENV") != "production" {
@@ -30,5 +30,6 @@ func main() {
 		seed.Load(server.DB)
 	}
 
-	server.Run(port)
+	server.Run(":" + port)
+
 }
