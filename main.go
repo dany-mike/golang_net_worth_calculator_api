@@ -16,9 +16,13 @@ var server = controllers.Server{}
 func main() {
 	port := ":5050"
 	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+
+	if os.Getenv("APP_ENV") != "production" {
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
+
 	server.Initialize(os.Getenv("DB_DRIVER"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_PORT"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
 	fmt.Printf("Server running on port %s", port)
 
